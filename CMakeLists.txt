@@ -25,9 +25,14 @@ set(HEADERS
         src/simulator.h
         src/attacker.h
         src/proxy.h
-        src/include/cptl.h
         src/curl_utils.cpp
         src/curl_utils.h
+        src/webscanner.cpp
+        src/webscanner.h
+        src/webscanner_tab.cpp
+        src/webscanner_tab.h
+        src/include/cptl.h
+        src/style.h
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
