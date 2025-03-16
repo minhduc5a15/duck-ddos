@@ -1,6 +1,7 @@
 #include "simulator.h"
 #include "attacker.h"
 #include "proxy.h"
+#include "style.h"
 #include <QGridLayout>
 #include <QLabel>
 #include <QMessageBox>
@@ -12,7 +13,6 @@
 
 DDoSSimulator::DDoSSimulator(QWidget *parent) : QWidget(parent) {
     setupUi();
-    applyStyle();
     statusTimer = new QTimer(this);
     connect(statusTimer, &QTimer::timeout, this, &DDoSSimulator::updateStatus);
     statusTimer->start(1000);
@@ -20,7 +20,6 @@ DDoSSimulator::DDoSSimulator(QWidget *parent) : QWidget(parent) {
 
 void DDoSSimulator::setupUi() {
     setWindowTitle("DDoS Simulator");
-    setMinimumSize(600, 500);
 
     urlInput = new QLineEdit(this);
     urlInput->setPlaceholderText("Enter target URL (e.g., http://localhost)");
@@ -93,50 +92,7 @@ void DDoSSimulator::setupUi() {
     connect(loadProxyButton, &QPushButton::clicked, this, &DDoSSimulator::loadProxyFile);
 }
 
-void DDoSSimulator::applyStyle() {
-    setStyleSheet(R"(
-        QWidget {
-            background-color: #2b2b2b;
-            color: #d4d4d4;
-            font-family: "Arial", sans-serif;
-        }
-        QLineEdit, QComboBox, QSpinBox {
-            background-color: #3c3c3c;
-            border: 1px solid #555555;
-            border-radius: 5px;
-            padding: 5px;
-            color: #d4d4d4;
-        }
-        QPushButton {
-            background-color: #5c85d6;
-            color: #ffffff;
-            border: none;
-            border-radius: 3px;
-            padding: 8px;
-            font-weight: bold;
-        }
-        QPushButton:hover {
-            background-color: #476bb3;
-        }
-        QTextEdit {
-            background-color: #1e1e1e;
-            border: 1px solid #555555;
-            border-radius: 5px;
-            color: #d4d4d4;
-        }
-        QSlider::groove:horizontal {
-            background: #555555;
-            height: 8px;
-        }
-        QSlider::handle:horizontal {
-            background: #5c85d6;
-            width: 16px;
-        }
-        QCheckBox {
-            color: #d4d4d4;
-        }
-    )");
-}
+// Xóa applyStyle(), dùng Style::darkTheme() ở constructor
 
 void DDoSSimulator::log(const QString &message) const {
     const QString timestamp = QDateTime::currentDateTime().toString("[hh:mm:ss] ");
