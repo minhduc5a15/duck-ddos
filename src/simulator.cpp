@@ -10,12 +10,12 @@
 #include <QFile>
 #include <QTextStream>
 
-DDoSSimulator::DDoSSimulator(QWidget* parent) : QWidget(parent) {
+DDoSSimulator::DDoSSimulator(QWidget *parent) : QWidget(parent) {
     setupUi();
     applyStyle();
     statusTimer = new QTimer(this);
     connect(statusTimer, &QTimer::timeout, this, &DDoSSimulator::updateStatus);
-    statusTimer->start(1000); // Cập nhật mỗi 1 giây
+    statusTimer->start(1000);
 }
 
 void DDoSSimulator::setupUi() {
@@ -30,17 +30,27 @@ void DDoSSimulator::setupUi() {
     attackType->addItem("Slowloris");
 
     threadSlider = new QSlider(Qt::Horizontal, this);
-    threadSlider->setRange(1, 100); // Tăng max threads lên 100
+    threadSlider->setRange(1, 100);
     threadSlider->setValue(5);
 
     requestCount = new QSpinBox(this);
-    requestCount->setRange(10, 10000); // Tăng max requests lên 10000
+    requestCount->setRange(10, 10000);
     requestCount->setValue(100);
+
+    rpsInput = new QSpinBox(this);
+    rpsInput->setRange(1, 10000);
+    rpsInput->setValue(100);
 
     proxyInput = new QLineEdit(this);
     proxyInput->setPlaceholderText("Proxy IP:Port or file path (e.g., proxies.txt)");
 
     useProxyCheck = new QCheckBox("Use Proxy", this);
+
+    headerInput = new QLineEdit(this);
+    headerInput->setPlaceholderText("Custom Header (e.g., Cookie: id=123)");
+
+    sslVerifyCheck = new QCheckBox("Verify SSL", this);
+    sslVerifyCheck->setChecked(true);
 
     startButton = new QPushButton("Start", this);
     stopButton = new QPushButton("Stop", this);
@@ -51,24 +61,29 @@ void DDoSSimulator::setupUi() {
     logDisplay = new QTextEdit(this);
     logDisplay->setReadOnly(true);
 
-    auto* layout = new QGridLayout;
+    auto *layout = new QGridLayout;
     layout->addWidget(new QLabel("Target URL:"), 0, 0);
     layout->addWidget(urlInput, 0, 1, 1, 3);
     layout->addWidget(new QLabel("Attack Type:"), 1, 0);
     layout->addWidget(attackType, 1, 1, 1, 3);
     layout->addWidget(new QLabel("Threads:"), 2, 0);
     layout->addWidget(threadSlider, 2, 1, 1, 3);
-    layout->addWidget(new QLabel("Requests (HTTP Flood):"), 3, 0);
-    layout->addWidget(requestCount, 3, 1, 1, 3);
+    layout->addWidget(new QLabel("Requests:"), 3, 0);
+    layout->addWidget(requestCount, 3, 1);
+    layout->addWidget(new QLabel("RPS:"), 3, 2);
+    layout->addWidget(rpsInput, 3, 3);
     layout->addWidget(new QLabel("Proxy (optional):"), 4, 0);
     layout->addWidget(proxyInput, 4, 1, 1, 2);
     layout->addWidget(useProxyCheck, 4, 3);
-    layout->addWidget(startButton, 5, 0);
-    layout->addWidget(stopButton, 5, 1);
-    layout->addWidget(pauseButton, 5, 2);
-    layout->addWidget(clearButton, 5, 3);
-    layout->addWidget(loadProxyButton, 6, 0, 1, 4);
-    layout->addWidget(logDisplay, 7, 0, 1, 4);
+    layout->addWidget(new QLabel("Custom Header:"), 5, 0);
+    layout->addWidget(headerInput, 5, 1, 1, 3);
+    layout->addWidget(startButton, 6, 0);
+    layout->addWidget(stopButton, 6, 1);
+    layout->addWidget(pauseButton, 6, 2);
+    layout->addWidget(sslVerifyCheck, 6, 3);
+    layout->addWidget(clearButton, 7, 0);
+    layout->addWidget(loadProxyButton, 7, 1, 1, 3);
+    layout->addWidget(logDisplay, 8, 0, 1, 4);
     setLayout(layout);
 
     connect(startButton, &QPushButton::clicked, this, &DDoSSimulator::startAttack);
@@ -96,6 +111,7 @@ void DDoSSimulator::applyStyle() {
             background-color: #5c85d6;
             color: #ffffff;
             border: none;
+            border-radius: 3px;
             padding: 8px;
             font-weight: bold;
         }
@@ -122,12 +138,12 @@ void DDoSSimulator::applyStyle() {
     )");
 }
 
-void DDoSSimulator::log(const QString& message) const {
-    QString timestamp = QDateTime::currentDateTime().toString("[hh:mm:ss] ");
+void DDoSSimulator::log(const QString &message) const {
+    const QString timestamp = QDateTime::currentDateTime().toString("[hh:mm:ss] ");
     logDisplay->append(timestamp + message);
 }
 
-bool DDoSSimulator::validateUrl(const QString& url) const {
+bool DDoSSimulator::validateUrl(const QString &url) const {
     static const QRegularExpression re(
         "^(http|https)://("
         "([a-zA-Z0-9\\-.]+\\.[a-zA-Z]{2,})|"
@@ -138,7 +154,7 @@ bool DDoSSimulator::validateUrl(const QString& url) const {
     return re.match(url).hasMatch();
 }
 
-bool DDoSSimulator::validateProxy(const QString& proxy) const {
+bool DDoSSimulator::validateProxy(const QString &proxy) const {
     static const QRegularExpression re(R"(^\d+\.\d+\.\d+\.\d+:\d+$)");
     return proxy.isEmpty() || re.match(proxy).hasMatch();
 }
@@ -157,25 +173,28 @@ void DDoSSimulator::startAttack() {
     const std::string type = attackType->currentText().toStdString();
     const int threads = threadSlider->value();
     const int requests = requestCount->value();
+    const int rps = rpsInput->value();
+    const std::string customHeader = headerInput->text().toStdString();
+    const bool verifySSL = sslVerifyCheck->isChecked();
     ProxyManager proxy;
+
     if (useProxyCheck->isChecked()) {
-        QString proxyText = proxyInput->text();
+        const QString proxyText = proxyInput->text();
         if (QFile::exists(proxyText)) {
             QFile file(proxyText);
             if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
                 QTextStream in(&file);
-                std::vector<std::string> proxies;
-                while (!in.atEnd()) {
-                    QString line = in.readLine().trimmed();
-                    if (validateProxy(line)) {
-                        proxies.push_back(line.toStdString());
-                    }
-                }
+                std::vector<std::string> proxies, liveProxies;
+                while (!in.atEnd()) proxies.push_back(in.readLine().trimmed().toStdString());
                 file.close();
-                proxy.setProxyList(proxies);
-                log(QString("Loaded %1 proxies from file").arg(proxies.size()));
+                for (const auto &p: proxies) {
+                    if (proxy.testProxy(p)) liveProxies.push_back(p);
+                }
+                proxy.setProxyList(liveProxies);
+                log(QString("Loaded %1 live proxies from %2").arg(liveProxies.size()).arg(proxies.size()));
             }
-        } else {
+        }
+        else {
             proxy.setProxy(proxyText.toStdString());
         }
     }
@@ -184,13 +203,16 @@ void DDoSSimulator::startAttack() {
     log(QString("Starting %1 attack on %2 with %3 threads")
         .arg(type.c_str(), url.c_str()).arg(threads));
     if (type == "HTTP Flood") {
-        log(QString("Sending %1 requests per thread").arg(requests));
+        log(QString("Sending %1 requests per thread at %2 RPS").arg(requests).arg(rps));
     }
     if (proxy.isEnabled()) {
         log(QString("Using %1 proxies").arg(proxy.proxyCount()));
     }
+    if (!customHeader.empty()) {
+        log(QString("Using custom header: %1").arg(customHeader.c_str()));
+    }
 
-    Attacker::start(url, type, threads, requests, proxy);
+    Attacker::start(url, type, threads, requests, rps, customHeader, verifySSL, proxy);
     pauseButton->setText("Pause");
 }
 
@@ -208,7 +230,8 @@ void DDoSSimulator::pauseAttack() {
     if (Attacker::isPaused()) {
         log("Attack paused.");
         pauseButton->setText("Resume");
-    } else {
+    }
+    else {
         log("Attack resumed.");
         pauseButton->setText("Pause");
     }

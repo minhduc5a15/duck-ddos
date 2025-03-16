@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.28)
 
 project(ddos_simulator)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_AUTOMOC ON)
@@ -25,6 +25,9 @@ set(HEADERS
         src/simulator.h
         src/attacker.h
         src/proxy.h
+        src/include/cptl.h
+        src/curl_utils.cpp
+        src/curl_utils.h
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
@@ -36,7 +39,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         ${CURL_LIBRARIES}
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${CURL_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${CURL_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/src/include)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"

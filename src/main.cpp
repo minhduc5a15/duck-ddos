@@ -2,7 +2,7 @@
 #include "simulator.h"
 #include <curl/curl.h>
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     curl_global_init(CURL_GLOBAL_ALL);
     QApplication app(argc, argv);
     DDoSSimulator window;
