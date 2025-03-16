@@ -8,6 +8,7 @@
 #include <QTextEdit>
 #include <QSpinBox>
 #include <QCheckBox>
+#include <QTimer> // Thêm để cập nhật trạng thái
 
 class DDoSSimulator final : public QWidget {
     Q_OBJECT
@@ -20,6 +21,8 @@ public:
     void stopAttack() const;
     void pauseAttack();
     void clearLog() const;
+    void loadProxyFile(); // Tải proxy từ file
+    void updateStatus() const; // Cập nhật trạng thái
 
 private:
     QLineEdit* urlInput{};
@@ -32,7 +35,9 @@ private:
     QPushButton* stopButton{};
     QPushButton* pauseButton{};
     QPushButton* clearButton{};
+    QPushButton* loadProxyButton{}; // Nút tải proxy
     QTextEdit* logDisplay{};
+    QTimer* statusTimer{}; // Timer cập nhật trạng thái
 
     void setupUi();
     void applyStyle();

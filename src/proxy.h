@@ -2,18 +2,25 @@
 #define PROXY_H
 
 #include <string>
+#include <vector>
+#include <random>
 
 class ProxyManager {
 public:
     explicit ProxyManager(const std::string& proxy = "");
     void setProxy(const std::string& proxy);
-    std::string getProxy() const;
+    void setProxyList(const std::vector<std::string>& proxies);
+    std::string getProxy() const; // Lấy proxy cố định
+    std::string getRandomProxy() const; // Lấy proxy ngẫu nhiên
     bool isEnabled() const;
     void enable(bool enabled);
+    size_t proxyCount() const;
 
 private:
-    std::string proxyAddress; // Lưu IP:Port (e.g., "103.221.222.222:8080")
-    bool enabled; // Trạng thái bật/tắt proxy
+    std::string proxyAddress; // Proxy đơn
+    std::vector<std::string> proxyList; // Danh sách proxy
+    bool enabled;
+    mutable std::mt19937 rng; // Random engine
 };
 
 #endif // PROXY_H
