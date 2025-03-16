@@ -9,7 +9,7 @@ int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
     app.setStyleSheet(Style::darkTheme());
 
-    QTabWidget *tabWidget = new QTabWidget;
+    const auto tabWidget = new QTabWidget;
     tabWidget->addTab(new DDoSSimulator, "DDoS Simulator");
     tabWidget->addTab(new WebScannerTab, "Web Scanner");
     tabWidget->setWindowTitle("Network Tool");
@@ -18,5 +18,7 @@ int main(int argc, char *argv[]) {
 
     const int result = QApplication::exec();
     curl_global_cleanup();
+
+    delete tabWidget;
     return result;
 }

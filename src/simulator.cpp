@@ -92,8 +92,6 @@ void DDoSSimulator::setupUi() {
     connect(loadProxyButton, &QPushButton::clicked, this, &DDoSSimulator::loadProxyFile);
 }
 
-// Xóa applyStyle(), dùng Style::darkTheme() ở constructor
-
 void DDoSSimulator::log(const QString &message) const {
     const QString timestamp = QDateTime::currentDateTime().toString("[hh:mm:ss] ");
     logDisplay->append(timestamp + message);

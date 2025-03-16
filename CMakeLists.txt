@@ -49,3 +49,17 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CURL_INCLUDE_DIRS} ${CMAKE_
 set_target_properties(${PROJECT_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
+
+if (WIN32)
+    find_program(QT_WINDEPLOY windeployqt HINTS "${_Qt5_DIR}/../../../bin")
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${QT_WINDEPLOY} --no-translations --no-system-d3d-compiler "$<TARGET_FILE:${PROJECT_NAME}>"
+            COMMENT "Copying Qt dependencies to output directory"
+    )
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "C:/curl/bin/libcurl-x64.dll"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+            COMMENT "Copying libcurl DLL to output directory"
+    )
+endif ()

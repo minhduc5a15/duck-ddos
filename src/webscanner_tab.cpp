@@ -60,6 +60,7 @@ void WebScannerTab::setupUi() {
 
     connect(startButton, &QPushButton::clicked, this, &WebScannerTab::startScan);
     connect(stopButton, &QPushButton::clicked, this, &WebScannerTab::stopScan);
+
 }
 
 void WebScannerTab::log(const QString &message) const {
@@ -97,13 +98,11 @@ void WebScannerTab::startScan() {
 }
 
 void WebScannerTab::stopScan() const {
-    // Thêm const
     WebScanner::stop();
     log("Scan stopped.");
 }
 
 void WebScannerTab::updateScanResult() const {
-    // Thêm const
     const std::string result = WebScanner::getScanResult();
     if (!result.empty()) {
         log(QString::fromStdString(result));

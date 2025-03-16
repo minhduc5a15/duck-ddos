@@ -51,8 +51,6 @@ private:
 
     void setupUi();
 
-    void applyStyle();
-
     void log(const QString &message) const;
 
     bool validateUrl(const QString &url) const;
