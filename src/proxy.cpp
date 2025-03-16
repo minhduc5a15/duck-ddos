@@ -15,6 +15,6 @@ bool ProxyManager::isEnabled() const {
     return enabled;
 }
 
-void ProxyManager::enable(bool enabled) {
+void ProxyManager::enable(const bool enabled) {
     this->enabled = enabled;
 }

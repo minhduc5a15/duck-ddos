@@ -5,7 +5,7 @@
 
 class ProxyManager {
 public:
-    ProxyManager(const std::string& proxy = "");
+    explicit ProxyManager(const std::string& proxy = "");
     void setProxy(const std::string& proxy);
     std::string getProxy() const;
     bool isEnabled() const;

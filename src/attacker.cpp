@@ -67,7 +67,7 @@ void Attacker::slowloris(const std::string& url, const ProxyManager& proxy) {
     }
 }
 
-void Attacker::start(const std::string& url, const std::string& type, int threads, int requests, const ProxyManager& proxy) {
+void Attacker::start(const std::string& url, const std::string& type, const int threads, int requests, const ProxyManager& proxy) {
     attacking = true;
     paused = false;
     for (int i = 0; i < threads; ++i) {

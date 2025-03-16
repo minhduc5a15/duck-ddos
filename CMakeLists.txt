@@ -14,29 +14,30 @@ find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
 find_package(CURL REQUIRED)
 
 set(SOURCES
-    src/main.cpp
-    src/simulator.cpp
-    src/attacker.cpp
+        src/main.cpp
+        src/simulator.cpp
+        src/attacker.cpp
+        src/proxy.cpp
+
 )
 
 set(HEADERS
-    src/simulator.h
-    src/attacker.h
-        src/proxy.cpp
+        src/simulator.h
+        src/attacker.h
         src/proxy.h
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-    Qt5::Core
-    Qt5::Gui
-    Qt5::Widgets
-    ${CURL_LIBRARIES}
+        Qt5::Core
+        Qt5::Gui
+        Qt5::Widgets
+        ${CURL_LIBRARIES}
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CURL_INCLUDE_DIRS})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
