@@ -4,31 +4,30 @@
 #include <string>
 #include <vector>
 #include <random>
-#include "curl_utils.h"
 
 class ProxyManager {
 public:
     explicit ProxyManager(const std::string &proxy = "");
 
-    void setProxy(const std::string &proxy);
+    void set_proxy(const std::string &proxy);
 
-    void setProxyList(const std::vector<std::string> &proxies);
+    void set_proxy_list(const std::vector<std::string> &proxies);
 
-    std::string getProxy() const;
+    std::string get_proxy() const;
 
-    std::string getRandomProxy() const;
+    std::string get_random_proxy() const;
 
-    bool testProxy(const std::string &proxy) const;
+    bool test_proxy(const std::string &proxy) const;
 
-    bool isEnabled() const;
+    bool is_enabled() const;
 
     void enable(bool enabled);
 
-    size_t proxyCount() const;
+    size_t proxy_count() const;
 
 private:
-    std::string proxyAddress;
-    std::vector<std::string> proxyList;
+    std::string proxy_address_;
+    std::vector<std::string> proxy_list_;
     bool enabled;
     mutable std::mt19937 rng;
 };

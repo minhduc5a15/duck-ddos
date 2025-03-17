@@ -9,31 +9,31 @@
 class Attacker {
 public:
     static void start(const std::string &url, const std::string &type, int threads, int requests = 100, int rps = 100,
-                      const std::string &customHeader = "", bool verifySSL = true, const ProxyManager &proxy = ProxyManager());
+                      const std::string &custom_header = "", bool verify_ssl = true, const ProxyManager &proxy = ProxyManager());
 
     static void stop();
 
     static void pause();
 
-    static bool isPaused();
+    static bool is_paused();
 
-    static bool isAttacking();
+    static bool is_attacking();
 
-    static int getSuccessfulRequests();
+    static int get_successful_requests();
 
-    static int getFailedRequests();
+    static int get_failed_requests();
 
 private:
-    static void httpFlood(const std::string &url, int requests, int rps, const std::string &customHeader, bool verifySSL, const ProxyManager &proxy);
+    static void http_flood(const std::string &url, int requests, int rps, const std::string &custom_header, bool verify_ssl, const ProxyManager &proxy);
 
     static void slowloris(const std::string &url, const ProxyManager &proxy);
 
-    static std::string getRandomUserAgent();
+    static std::string get_random_user_agent();
 
     static std::atomic<bool> attacking;
     static std::atomic<bool> paused;
-    static std::atomic<int> successfulRequests;
-    static std::atomic<int> failedRequests;
+    static std::atomic<int> successful_requests_;
+    static std::atomic<int> failed_requests_;
     static ctpl::thread_pool pool;
 };
 

@@ -9,16 +9,16 @@ int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
     app.setStyleSheet(Style::darkTheme());
 
-    const auto tabWidget = new QTabWidget;
-    tabWidget->addTab(new DDoSSimulator, "DDoS Simulator");
-    tabWidget->addTab(new WebScannerTab, "Web Scanner");
-    tabWidget->setWindowTitle("Network Tool");
-    tabWidget->resize(800, 640);
-    tabWidget->show();
+    const auto tab_widget = new QTabWidget;
+    tab_widget->addTab(new DDoSSimulator, "DDoS Simulator");
+    tab_widget->addTab(new WebScannerTab, "Web Scanner");
+    tab_widget->setWindowTitle("Network Tool");
+    tab_widget->resize(800, 640);
+    tab_widget->show();
 
     const int result = QApplication::exec();
     curl_global_cleanup();
 
-    delete tabWidget;
+    delete tab_widget;
     return result;
 }
