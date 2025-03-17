@@ -10,26 +10,25 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
-
 find_package(CURL REQUIRED)
+find_package(jsoncpp REQUIRED)
 
 set(SOURCES
         src/main.cpp
         src/simulator.cpp
         src/attacker.cpp
         src/proxy.cpp
-
+        src/curl_utils.cpp
+        src/webscanner.cpp
+        src/webscanner_tab.cpp
 )
 
 set(HEADERS
         src/simulator.h
         src/attacker.h
         src/proxy.h
-        src/curl_utils.cpp
         src/curl_utils.h
-        src/webscanner.cpp
         src/webscanner.h
-        src/webscanner_tab.cpp
         src/webscanner_tab.h
         src/include/cptl.h
         src/style.h
@@ -42,9 +41,14 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         Qt5::Gui
         Qt5::Widgets
         ${CURL_LIBRARIES}
+        jsoncpp_lib
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${CURL_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/src/include)
+target_include_directories(${PROJECT_NAME} PRIVATE
+        ${CURL_INCLUDE_DIRS}
+        ${CMAKE_SOURCE_DIR}/src/include
+        ${JSONCPP_INCLUDE_DIRS}
+)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"

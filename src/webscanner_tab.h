@@ -8,6 +8,8 @@
 #include <QTextEdit>
 #include <QCheckBox>
 #include <QTimer>
+#include <QProgressBar>
+#include <QFileDialog>
 
 class WebScannerTab final : public QWidget {
     Q_OBJECT
@@ -15,12 +17,11 @@ class WebScannerTab final : public QWidget {
 public:
     explicit WebScannerTab(QWidget *parent = nullptr);
 
-private slots:
-    void start_scan();
-
+    private slots:
+        void start_scan();
     void stop_scan() const;
-
     void update_scan_result() const;
+    void export_result();
 
 private:
     QLineEdit *url_input_{};
@@ -32,13 +33,15 @@ private:
     QCheckBox *ssl_verify_check_{};
     QPushButton *start_button_{};
     QPushButton *stop_button_{};
+    QPushButton *export_button_{};
     QTextEdit *result_display_{};
     QTimer *result_timer_{};
+    QProgressBar *progress_bar_{};
+    QLineEdit *request_rate_input_{};
+    QLineEdit *timeout_input_{};
 
     void setup_ui();
-
     void log(const QString &message) const;
-
     bool validate_url(const QString &url) const;
 };
 

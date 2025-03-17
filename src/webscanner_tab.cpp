@@ -18,6 +18,8 @@ void WebScannerTab::setup_ui() {
 
     scan_type_ = new QComboBox(this);
     scan_type_->addItem("Headers");
+    scan_type_->addItem("Security Headers");
+    scan_type_->addItem("Files and Directories");
 
     thread_slider_ = new QSlider(Qt::Horizontal, this);
     thread_slider_->setRange(1, 10);
@@ -36,9 +38,18 @@ void WebScannerTab::setup_ui() {
 
     start_button_ = new QPushButton("Start Scan", this);
     stop_button_ = new QPushButton("Stop Scan", this);
+    export_button_ = new QPushButton("Export Result", this);
 
     result_display_ = new QTextEdit(this);
     result_display_->setReadOnly(true);
+
+    progress_bar_ = new QProgressBar(this);
+
+    request_rate_input_ = new QLineEdit(this);
+    request_rate_input_->setPlaceholderText("Requests per second (e.g., 10)");
+
+    timeout_input_ = new QLineEdit(this);
+    timeout_input_->setPlaceholderText("Timeout in seconds (e.g., 5)");
 
     auto *layout = new QGridLayout;
     layout->addWidget(new QLabel("Target URL:"), 0, 0);
@@ -55,11 +66,18 @@ void WebScannerTab::setup_ui() {
     layout->addWidget(start_button_, 5, 0);
     layout->addWidget(stop_button_, 5, 1);
     layout->addWidget(ssl_verify_check_, 5, 2);
-    layout->addWidget(result_display_, 6, 0, 1, 3);
+    layout->addWidget(export_button_, 6, 0, 1, 3);
+    layout->addWidget(result_display_, 7, 0, 1, 3);
+    layout->addWidget(progress_bar_, 8, 0, 1, 3);
+    layout->addWidget(new QLabel("Request Rate:"), 9, 0);
+    layout->addWidget(request_rate_input_, 9, 1);
+    layout->addWidget(new QLabel("Timeout:"), 10, 0);
+    layout->addWidget(timeout_input_, 10, 1);
     setLayout(layout);
 
     connect(start_button_, &QPushButton::clicked, this, &WebScannerTab::start_scan);
     connect(stop_button_, &QPushButton::clicked, this, &WebScannerTab::stop_scan);
+    connect(export_button_, &QPushButton::clicked, this, &WebScannerTab::export_result);
 }
 
 void WebScannerTab::log(const QString &message) const {
@@ -105,5 +123,32 @@ void WebScannerTab::update_scan_result() const {
     const std::string result = WebScanner::get_scan_result();
     if (!result.empty()) {
         log(QString::fromStdString(result));
+    }
+}
+
+void WebScannerTab::export_result() {
+    if (WebScanner::get_scan_result().empty()) {
+        QMessageBox::warning(this, "Error", "No scan result to export!");
+        return;
+    }
+    const QString filename = QFileDialog::getSaveFileName(this, "Save Result", "", "JSON Files (*.json)");
+    if (!filename.isEmpty()) {
+        const std::string url = url_input_->text().toStdString();
+        const std::string result = WebScanner::get_scan_result();
+
+        long status_code = 0;
+        std::string response_headers;
+
+        const size_t status_pos = result.find("Status: ");
+        if (status_pos != std::string::npos) {
+            status_code = std::stol(result.substr(status_pos + 8, result.find('\n', status_pos) - (status_pos + 8)));
+        }
+
+        const size_t headers_pos = result.find("Headers:\n");
+        if (headers_pos != std::string::npos) {
+            response_headers = result.substr(headers_pos + 9);
+        }
+
+        WebScanner::export_to_json(filename.toStdString(), url, status_code, response_headers);
     }
 }
