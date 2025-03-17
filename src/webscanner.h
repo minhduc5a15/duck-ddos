@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include "proxy.h"
 #include "cptl.h"
+#include <thread>
 
 class WebScanner {
 public:
@@ -21,6 +22,10 @@ public:
 
     static void set_request_rate(int rate);
 
+    static void clear_scan_result();
+
+    static bool is_scanning();
+
 private:
     static void scan_headers(const std::string &url, const std::string &custom_header, bool verify_ssl, const ProxyManager &proxy);
     static void scan_security_headers(const std::string &url, const std::string &custom_header, bool verify_ssl, const ProxyManager &proxy);
@@ -31,7 +36,7 @@ private:
     static std::atomic<bool> scanning;
     static std::string scan_result_;
     static ctpl::thread_pool pool;
-    static std::unordered_map<std::string, std::string> scan_cache;
+    static std::thread scan_thread; // Luồng để chạy scan
 };
 
 #endif // WEBSCANNER_H

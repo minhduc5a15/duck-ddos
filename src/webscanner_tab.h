@@ -17,11 +17,15 @@ class WebScannerTab final : public QWidget {
 public:
     explicit WebScannerTab(QWidget *parent = nullptr);
 
+    signals:
+        void scanResultUpdated(const QString &result); // Signal để cập nhật kết quả
+
     private slots:
         void start_scan();
     void stop_scan() const;
-    void update_scan_result() const;
+    void update_scan_result(const QString &result) const; // Slot để nhận kết quả
     void export_result();
+    void clear_scan_result() const;
 
 private:
     QLineEdit *url_input_{};
@@ -34,6 +38,7 @@ private:
     QPushButton *start_button_{};
     QPushButton *stop_button_{};
     QPushButton *export_button_{};
+    QPushButton *clear_button_{};
     QTextEdit *result_display_{};
     QTimer *result_timer_{};
     QProgressBar *progress_bar_{};

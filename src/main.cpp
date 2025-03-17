@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
     tab_widget->addTab(new DDoSSimulator, "DDoS Simulator");
     tab_widget->addTab(new WebScannerTab, "Web Scanner");
     tab_widget->setWindowTitle("Network Tool");
-    tab_widget->resize(800, 640);
+    tab_widget->resize(1280, 720);
     tab_widget->show();
 
     const int result = QApplication::exec();

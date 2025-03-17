@@ -5,11 +5,23 @@
 #include <QLabel>
 #include <QMessageBox>
 
+namespace web_scanner {
+    constexpr int RESULT_UPDATE_INTERVAL_MS = 1000;
+    constexpr int DEFAULT_THREAD_POOL_SIZE = 50;
+} ;
+
 WebScannerTab::WebScannerTab(QWidget *parent) : QWidget(parent) {
     setup_ui();
     result_timer_ = new QTimer(this);
-    connect(result_timer_, &QTimer::timeout, this, &WebScannerTab::update_scan_result);
-    result_timer_->start(1000);
+    connect(result_timer_, &QTimer::timeout, this, [this]() {
+        const std::string result = WebScanner::get_scan_result();
+        if (!result.empty()) {
+            emit scanResultUpdated(QString::fromStdString(result));
+        }
+    });
+    connect(this, &WebScannerTab::scanResultUpdated, this, &WebScannerTab::update_scan_result);
+    connect(clear_button_, &QPushButton::clicked, this, &WebScannerTab::clear_scan_result);
+    result_timer_->start(web_scanner::RESULT_UPDATE_INTERVAL_MS);
 }
 
 void WebScannerTab::setup_ui() {
@@ -38,6 +50,7 @@ void WebScannerTab::setup_ui() {
 
     start_button_ = new QPushButton("Start Scan", this);
     stop_button_ = new QPushButton("Stop Scan", this);
+    clear_button_ = new QPushButton("Clear", this);
     export_button_ = new QPushButton("Export Result", this);
 
     result_display_ = new QTextEdit(this);
@@ -65,6 +78,7 @@ void WebScannerTab::setup_ui() {
     layout->addWidget(header_input_, 4, 1, 1, 2);
     layout->addWidget(start_button_, 5, 0);
     layout->addWidget(stop_button_, 5, 1);
+    layout->addWidget(clear_button_, 5, 2);
     layout->addWidget(ssl_verify_check_, 5, 2);
     layout->addWidget(export_button_, 6, 0, 1, 3);
     layout->addWidget(result_display_, 7, 0, 1, 3);
@@ -114,15 +128,20 @@ void WebScannerTab::start_scan() {
     WebScanner::start(url, type, threads, custom_header, verifySSL, proxy);
 }
 
+void WebScannerTab::clear_scan_result() const {
+    WebScanner::clear_scan_result();
+    result_display_->clear();
+}
+
 void WebScannerTab::stop_scan() const {
     WebScanner::stop();
     log("Scan stopped.");
 }
 
-void WebScannerTab::update_scan_result() const {
-    const std::string result = WebScanner::get_scan_result();
-    if (!result.empty()) {
-        log(QString::fromStdString(result));
+void WebScannerTab::update_scan_result(const QString &result) const {
+    log(result);
+    if (!WebScanner::is_scanning()) {
+        WebScanner::clear_scan_result();
     }
 }
 
@@ -150,5 +169,6 @@ void WebScannerTab::export_result() {
         }
 
         WebScanner::export_to_json(filename.toStdString(), url, status_code, response_headers);
+        log("Results exported to " + filename);
     }
 }
